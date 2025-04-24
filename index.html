@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="keywords" content="partículas, animación, canvas, JavaScript, efectos visuales, generador, interactivo, 3D, web, diseño, arte digital">
+    <meta name="description" content="Generador interactivo de partículas animadas en 3D con JavaScript y HTML5 Canvas. Personaliza la cantidad, tamaño, velocidad, color y opacidad de las partículas. Crea efectos visuales únicos y dinámicos.">
+    <meta name="author" content="Your Name">
+    <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Partículas</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Color de fondo inicial para la página */
+            font-family: sans-serif;
+            color: #fff;
+            transition: background-color 0.5s ease; /* Transición suave para el cambio de color de fondo */
+        }
+        canvas {
+            display: block; /* Evita espacio extra debajo del canvas */
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            width: 350px;
+            z-index: 10;
+        }
+        #controls label, #controls span {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        #controls input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #333;
+            border-radius: 5px;
+            height: 5px;
+            cursor: pointer;
+            outline: none;
+        }
+        #controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f08;
+            cursor: pointer;
+        }
+        #controls input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f08;
+        }
+         #controls input[type="range"] {
+            width: 100%;
+        }
+        #controls input[type="color"] {
+            width: 50px;
+            height: 25px;
+            padding: 0;
+            border: 1px solid #555;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        #controls input[type="color"]::-webkit-color-swatch-wrapper { border-radius: 50%; padding: 0; }
+         #controls input[type="checkbox"] {
+            vertical-align: middle;
+            margin-right: 3px;
+         }
+        #controls .control-group {
+            margin-bottom: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-bottom: 5px;
+        }
+         #controls .control-group:last-child {
+            
+            margin-bottom: 0;
+            padding-bottom: 0;
+         }
+         #controls #footer {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 10px;
+         }
+         #controls #footer img {
+            max-width: 80px;
+            height: auto;
+         }
+         #toggleControls {
+            position: absolute;
+            top: 20px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 11;
+            font-size: 14px;
+            
+            
+        }
+        #fullscreenButton {
+            position: absolute;
+            top: 20px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 11;
+            font-size: 14px;
+            display: block;
+        }
+        #fullscreenButton::before {
+            content: "\21F1"; /* Código Unicode para el icono de pantalla completa */
+            font-size: 18px;
+            margin-right: 5px;
+        }
+        #toggleControls::before {
+         
+            font-size: 18px;
+            margin-right: 5px;
+        }
+        #resetButton {
+            background-color: #393939; /* Fondo gris */
+            color: #fff; /* Texto blanco */
+            border: none;
+            padding: 8px 15px;
+            border-radius: 35px;
+            cursor: pointer;
+        }
+        #resetButton:hover {
+            background-color: #f08; /* Hover rosa */
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <div id="controls">
+        <div class="control-group">
+            <label for="particleCount">Cantidad: <span id="countValue">100</span></label>
+            <input type="range" id="particleCount" min="10" max="500" value="100">
+        </div>
+
+        <div class="control-group">
+            <label for="particleBrightness">Brillo (Opacidad): <span id="brightnessValue">0.8</span></label>
+            <input type="range" id="particleBrightness" min="0.1" max="1" step="0.05" value="0.8">
+        </div>
+
+        <div class="control-group">
+            <label for="particleSize">Tamaño: <span id="sizeValue">3</span></label>
+            <input type="range" id="particleSize" min="1" max="10" value="3">
+        </div>
+
+        <div class="control-group">
+            <label for="particleSpeed">Velocidad: <span id="speedValue">1</span></label>
+            <input type="range" id="particleSpeed" min="0.1" max="5" step="0.1" value="1">
+        </div>
+
+        <div class="control-group">
+            <label for="depth3D">Profundidad 3D: <span id="depthValue">100</span></label>
+            <input type="range" id="depth3D" min="10" max="500" value="100">
+        </div>
+
+        <div class="control-group">
+            <label for="particleColor">Color Partículas:</label>
+            <input type="color" id="particleColor" value="#FFFFFF">
+        </div>
+
+        <div class="control-group">
+            <label for="backgroundColor">Color Fondo:</label>
+            <input type="color" id="backgroundColor" value="#000000">
+        </div>
+
+        <div class="control-group">
+            <div style="display: flex; align-items: center;">
+                <input type="checkbox" id="drawLines" checked>
+                <label for="drawLines">Unir Partículas</label>
+            </div>
+            
+             <label for="lineDistance">Distancia Unión: <span id="lineDistanceValue">100</span></label>
+            <input type="range" id="lineDistance" min="20" max="300" value="100">
+        </div>
+
+        <div class="control-group">
+            <button id="resetButton">Reiniciar</button>
+        </div>
+        <div id="footer">
+            <a href="https://www.psdcrazy.com" target="_blank">
+                <img src="https://www.psdcrazy.com/wp-content/uploads/2022/04/boletin_psd_crazy.png" alt="PSD Crazy"></a>
+        </div>
+    </div>
+
+    <button id="toggleControls"></button>
+    <button id="fullscreenButton"></button>
+
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Controles
+        const particleCountInput = document.getElementById('particleCount');
+        const countValueSpan = document.getElementById('countValue');
+        const particleBrightnessInput = document.getElementById('particleBrightness');
+        const brightnessValueSpan = document.getElementById('brightnessValue');
+        const particleSizeInput = document.getElementById('particleSize');
+        const sizeValueSpan = document.getElementById('sizeValue');
+        const particleSpeedInput = document.getElementById('particleSpeed');
+        const speedValueSpan = document.getElementById('speedValue');
+        const depth3DInput = document.getElementById('depth3D');
+        const depthValueSpan = document.getElementById('depthValue');
+        const particleColorInput = document.getElementById('particleColor');
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        const drawLinesInput = document.getElementById('drawLines');
+        const lineDistanceInput = document.getElementById('lineDistance');
+        const lineDistanceValueSpan = document.getElementById('lineDistanceValue');
+        const resetButton = document.getElementById('resetButton');
+        const toggleControlsButton = document.getElementById('toggleControls');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+
+        let particles = [];
+        let animationFrameId;
+
+        // --- Configuración Inicial ---
+        let config = {
+            particleCount: parseInt(particleCountInput.value),
+            particleBrightness: parseFloat(particleBrightnessInput.value),
+            particleSize: parseInt(particleSizeInput.value),
+            particleSpeed: parseFloat(particleSpeedInput.value),
+            depth3D: parseInt(depth3DInput.value), // Perspectiva / Distancia focal
+            particleColor: particleColorInput.value,
+            backgroundColor: backgroundColorInput.value,
+            drawLines: drawLinesInput.checked,
+            maxLineDistance: parseInt(lineDistanceInput.value)
+        };
+
+        // --- Valores Iniciales ---
+        const initialValues = {
+            particleCount: 100,
+            particleBrightness: 0.8,
+            particleSize: 3,
+            particleSpeed: 1,
+            depth3D: 100,
+            particleColor: "#FFFFFF",
+            backgroundColor: "#000000",
+            drawLines: true,
+            maxLineDistance: 100
+        };
+
+
+
+        // --- Clases y Funciones ---
+
+        // Función auxiliar para convertir Hex a RGB (necesario para la opacidad de las líneas)
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        class Particle {
+            constructor() {
+                // Posición inicial 3D (x, y van de -canvas/2 a +canvas/2, z de -depth a +depth)
+                this.x = (Math.random() - 0.5) * canvas.width;
+                this.y = (Math.random() - 0.5) * canvas.height;
+                this.z = Math.random() * config.depth3D * 2 - config.depth3D; // Rango [-depth, depth]
+
+                // Velocidad
+                this.vx = (Math.random() - 0.5) * config.particleSpeed;
+                this.vy = (Math.random() - 0.5) * config.particleSpeed;
+                this.vz = (Math.random() - 0.5) * config.particleSpeed * 0.5; // Menor velocidad en Z
+
+                // Propiedades proyectadas (se calculan en update)
+                this.projectedX = 0;
+                this.projectedY = 0;
+                this.projectedSize = 0;
+                this.projectedAlpha = 0;
+            }
+
+            update() {
+                // Mover en 3D
+                this.x += this.vx;
+                this.y += this.vy;
+                this.z += this.vz;
+
+                // Simular perspectiva (proyección)
+                // Factor de escala basado en Z. Cuanto más lejos (mayor Z negativo), más pequeño.
+                // Añadimos config.depth3D para evitar división por cero y mantener escala positiva
+                const scale = config.depth3D / (config.depth3D + this.z);
+
+                // Calcular coordenadas proyectadas en el canvas 2D
+                // Sumamos canvas.width/2 y canvas.height/2 para centrar el origen (0,0)
+                this.projectedX = this.x * scale + canvas.width / 2;
+                this.projectedY = this.y * scale + canvas.height / 2;
+
+                // Calcular tamaño y opacidad proyectados
+                this.projectedSize = Math.max(0.1, config.particleSize * scale); // Evitar tamaño negativo o cero
+                 // Más lejos (z negativo) o muy cerca (z positivo grande) -> más transparente
+                const depthAlphaFactor = Math.max(0, 1 - Math.abs(this.z) / (config.depth3D * 1.5));
+                this.projectedAlpha = config.particleBrightness * depthAlphaFactor;
+
+
+                // Resetear partícula si se aleja demasiado o se acerca demasiado
+                // O si sale de los bordes proyectados (con un margen)
+                const margin = 100; // Margen fuera del canvas antes de resetear
+                if (this.z <= -config.depth3D || this.z >= config.depth3D * 1.5 ||
+                    this.projectedX < -margin || this.projectedX > canvas.width + margin ||
+                    this.projectedY < -margin || this.projectedY > canvas.height + margin)
+                {
+                    this.reset();
+                }
+            }
+
+            reset() {
+                // Reinicia la posición y velocidad al azar
+                this.x = (Math.random() - 0.5) * canvas.width;
+                this.y = (Math.random() - 0.5) * canvas.height;
+                // Reinicia Z cerca del "frente" para que aparezcan gradualmente
+                this.z = Math.random() * config.depth3D * 0.5 + config.depth3D * 0.5;
+                this.vx = (Math.random() - 0.5) * config.particleSpeed;
+                this.vy = (Math.random() - 0.5) * config.particleSpeed;
+                this.vz = (Math.random() - 0.5) * config.particleSpeed * 0.5;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.projectedX, this.projectedY, this.projectedSize, 0, Math.PI * 2);
+                ctx.fillStyle = `${config.particleColor}${Math.round(this.projectedAlpha * 255).toString(16).padStart(2, '0')}`; // Color con opacidad
+                // Alternativa si el color no soporta alpha directamente en hex:
+                // const rgb = hexToRgb(config.particleColor);
+                // if (rgb) {
+                //     ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${this.projectedAlpha})`;
+                // } else {
+                //     ctx.fillStyle = `rgba(255, 255, 255, ${this.projectedAlpha})`; // Fallback blanco
+                // }
+                ctx.fill();
+            }
+        }
+
+        // --- Toggle Controls ---
+        let controlsVisible = true;
+        toggleControlsButton.addEventListener('click', () => {
+            controlsVisible = !controlsVisible;
+            if (controlsVisible) {
+                controls.style.display = 'block';
+                toggleControlsButton.innerHTML = '&#x25BC;'; // Flecha abajo
+                
+            } else {
+                controls.style.display = 'none';
+                toggleControlsButton.innerHTML = '&#x25B2;'; // Flecha arriba
+                
+            }
+        });
+
+        // --- Fullscreen ---
+        fullscreenButton.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+                    document.documentElement.mozRequestFullScreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // --- Reset Button ---
+        resetButton.addEventListener('click', () => {
+            // Restablecer los valores de los controles a los valores iniciales
+            particleCountInput.value = initialValues.particleCount;
+            particleBrightnessInput.value = initialValues.particleBrightness;
+            particleSizeInput.value = initialValues.particleSize;
+            particleSpeedInput.value = initialValues.particleSpeed;
+            depth3DInput.value = initialValues.depth3D;
+            particleColorInput.value = initialValues.particleColor;
+            backgroundColorInput.value = initialValues.backgroundColor;
+            drawLinesInput.checked = initialValues.drawLines;
+            lineDistanceInput.value = initialValues.maxLineDistance;
+
+            // Actualizar la configuración y la visualización
+            updateSettings();
+        });
+
+
+
+        function createParticles() {
+            particles = [];
+            for (let i = 0; i < config.particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connectParticles() {
+            const rgbColor = hexToRgb(config.particleColor) || { r: 255, g: 255, b: 255 }; // Fallback a blanco si falla
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+
+                    // Usar coordenadas proyectadas para la distancia visual
+                    const dx = p1.projectedX - p2.projectedX;
+                    const dy = p1.projectedY - p2.projectedY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < config.maxLineDistance) {
+                        // La opacidad de la línea disminuye con la distancia
+                        // y se combina con la opacidad promedio de las partículas (basada en Z)
+                        const lineOpacity = (1 - distance / config.maxLineDistance);
+                        const avgParticleAlpha = (p1.projectedAlpha + p2.projectedAlpha) / 2;
+                        const finalAlpha = lineOpacity * avgParticleAlpha * 0.8; // 0.8 para hacer las líneas un poco más tenues
+
+                        if (finalAlpha > 0.02) { // No dibujar líneas casi invisibles
+                            ctx.beginPath();
+                            ctx.moveTo(p1.projectedX, p1.projectedY);
+                            ctx.lineTo(p2.projectedX, p2.projectedY);
+                            ctx.strokeStyle = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${finalAlpha})`;
+                            // El grosor de la línea podría depender de Z también, pero lo dejamos fijo por simplicidad
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            // Limpiar canvas con el color de fondo seleccionado
+            ctx.fillStyle = config.backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Actualizar y dibujar partículas
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // Dibujar líneas si está activado
+            if (config.drawLines) {
+                connectParticles();
+            }
+
+            // Solicitar el siguiente frame
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Podríamos recrear las partículas aquí, pero reiniciar su posición
+            // al salir de los bordes suele ser suficiente y más suave.
+            // Si cambiamos el tamaño drásticamente, puede ser útil:
+            // updateSettings(); // Para reajustar si es necesario
+        }
+
+        function updateSettings() {
+            const newParticleCount = parseInt(particleCountInput.value);
+            const brightness = parseFloat(particleBrightnessInput.value);
+            const size = parseInt(particleSizeInput.value);
+            const speed = parseFloat(particleSpeedInput.value);
+            const depth = parseInt(depth3DInput.value);
+            const pColor = particleColorInput.value;
+            const bgColor = backgroundColorInput.value;
+            const lines = drawLinesInput.checked;
+            const lineDist = parseInt(lineDistanceInput.value);
+
+            // Actualizar valores mostrados
+            countValueSpan.textContent = newParticleCount;
+            brightnessValueSpan.textContent = brightness.toFixed(2);
+            sizeValueSpan.textContent = size;
+            speedValueSpan.textContent = speed.toFixed(1);
+            depthValueSpan.textContent = depth;
+            lineDistanceValueSpan.textContent = lineDist;
+
+            // Aplicar cambios a la configuración global
+            config.particleBrightness = brightness;
+            config.particleSize = size;
+            config.particleSpeed = speed;
+            config.depth3D = depth;
+            config.particleColor = pColor;
+            config.backgroundColor = bgColor;
+            config.drawLines = lines;
+            config.maxLineDistance = lineDist;
+
+            // Ajustar la cantidad de partículas si ha cambiado
+            if (newParticleCount !== config.particleCount) {
+                config.particleCount = newParticleCount;
+                createParticles(); // Recrear el array de partículas
+            }
+
+             // Actualizar velocidad de las partículas existentes (si no se recrearon)
+             if (newParticleCount === particles.length) {
+                 particles.forEach(p => {
+                    // Escalar velocidad existente basado en el nuevo valor vs el anterior (aproximado)
+                    // Esto evita saltos bruscos si solo cambia la velocidad
+                    // Nota: Esto es una simplificación. Una mejor manera sería almacenar la velocidad base
+                    // y multiplicarla por el factor de velocidad actual.
+                    // Por ahora, simplemente reasignamos velocidades al azar con la nueva escala:
+                     p.vx = (Math.random() - 0.5) * config.particleSpeed;
+                     p.vy = (Math.random() - 0.5) * config.particleSpeed;
+                     p.vz = (Math.random() - 0.5) * config.particleSpeed * 0.5;
+                 });
+             }
+        }
+
+        // --- Inicialización y Event Listeners ---
+
+        // Ajustar tamaño inicial y escuchar cambios
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); // Llamada inicial
+
+        // Escuchar cambios en los controles
+        particleCountInput.addEventListener('input', updateSettings);
+        particleBrightnessInput.addEventListener('input', updateSettings);
+        particleSizeInput.addEventListener('input', updateSettings);
+        particleSpeedInput.addEventListener('input', updateSettings);
+        depth3DInput.addEventListener('input', updateSettings);
+        particleColorInput.addEventListener('input', updateSettings);
+        backgroundColorInput.addEventListener('input', updateSettings);
+        drawLinesInput.addEventListener('change', updateSettings);
+        lineDistanceInput.addEventListener('input', updateSettings);
+
+        // Crear partículas iniciales y comenzar animación
+        createParticles();
+        animate();
+        toggleControlsButton.innerHTML = '&#x25BC;';
+
+    </script>
+
+</body>
+</html>
